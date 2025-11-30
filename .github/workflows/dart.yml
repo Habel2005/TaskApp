@@ -14,9 +14,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Force checkout to pull the absolute latest commit on the branch
+          ref: ${{ github.ref }} 
+          # Ensure full history is pulled (good practice for CI, though may not be necessary here)
+          fetch-depth: 0
 
       # 1. CHANGED: Use the Flutter-specific action
       - uses: subosito/flutter-action@v2
