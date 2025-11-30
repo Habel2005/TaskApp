@@ -46,7 +46,7 @@ jobs:
 
       # Optional: Build the APK or Web App (add this if you want to verify a full build)
       - name: Build APK (Android)
-        run: flutter build apk --release
+        run: flutter build apk --release --target-platform=android-arm64
 
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v4
