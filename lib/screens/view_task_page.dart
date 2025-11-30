@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../models/task.dart';
+import '../providers/task_provider.dart';
+import 'edit_task_page.dart';
 
 class ViewTaskPage extends StatelessWidget {
   final Task task;
@@ -14,64 +17,115 @@ class ViewTaskPage extends StatelessWidget {
     final Color priorityColor;
     switch (task.priority) {
       case Priority.high:
-        priorityColor = Colors.red;
+        priorityColor = Colors.red.shade400;
         break;
       case Priority.medium:
-        priorityColor = Colors.orange;
+        priorityColor = Colors.orange.shade400;
         break;
       case Priority.low:
-        priorityColor = Colors.green;
+        priorityColor = Colors.green.shade400;
         break;
     }
 
-    final isLightTheme = Theme.of(context).brightness == Brightness.light;
-
     return Scaffold(
-      backgroundColor: _getBackgroundColor(task.id, isLightTheme),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200.0,
+            expandedHeight: 250.0,
             pinned: true,
+            stretch: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 task.title,
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              background: Container(
-                color: _getBackgroundColor(task.id, isLightTheme)
-                    .withAlpha((255 * 0.8).round()),
+              background: Hero(
+                tag: task.id,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        priorityColor.withOpacity(0.8),
+                        priorityColor.withOpacity(0.4),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit, size: 28),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => EditTaskPage(task: task),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, size: 28),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete Task'),
+                      content: const Text(
+                          'Are you sure you want to delete this task?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Provider.of<TaskProvider>(context, listen: false)
+                                .deleteTask(task.id);
+                            Navigator.of(context).popUntil((route) => route.isFirst);
+                          },
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
           SliverToBoxAdapter(
             child: Container(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(
+                  _buildInfoCard(
                     icon: FontAwesomeIcons.solidCalendar,
                     label: 'Due Date',
-                    value: DateFormat.yMMMd().format(task.dueDate),
+                    value: DateFormat.yMMMEd().add_jm().format(task.dueDate),
+                    context: context,
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(
+                  const SizedBox(height: 24),
+                  _buildInfoCard(
                     icon: FontAwesomeIcons.solidFlag,
                     label: 'Priority',
                     value: task.priority.toString().split('.').last,
                     valueColor: priorityColor,
+                    context: context,
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(
+                  const SizedBox(height: 24),
+                  _buildInfoCard(
                     icon: task.isCompleted
                         ? FontAwesomeIcons.solidSquareCheck
                         : FontAwesomeIcons.square,
                     label: 'Status',
                     value: task.isCompleted ? 'Completed' : 'Pending',
+                    context: context,
                   ),
                 ],
               ),
@@ -82,42 +136,55 @@ class ViewTaskPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow({
+  Widget _buildInfoCard({
     required IconData icon,
     required String label,
     required String value,
     Color? valueColor,
+    required BuildContext context,
   }) {
-    return Row(
-      children: [
-        FaIcon(icon, size: 20),
-        const SizedBox(width: 16),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            color: valueColor,
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(15),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-        ),
-      ],
+        ],
+      ),
+      child: Row(
+        children: [
+          FaIcon(icon, size: 24, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: valueColor ?? Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
-  }
-
-  Color _getBackgroundColor(String taskId, bool isLightTheme) {
-    final hash = taskId.hashCode;
-    final r = (hash & 0xFF0000) >> 16;
-    final g = (hash & 0x00FF00) >> 8;
-    final b = hash & 0x0000FF;
-    if (isLightTheme) {
-      return Color.fromARGB(255, (r + 255) ~/ 2, (g + 255) ~/ 2, (b + 255) ~/ 2)
-          .withAlpha((255 * 0.5).round());
-    } else {
-      return Color.fromARGB(255, r, g, b).withAlpha((255 * 0.2).round());
-    }
   }
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../models/task.dart';
 import '../providers/task_provider.dart';
-import '../screens/add_task_page.dart';
-import '../screens/completed_tasks_page.dart';
-import '../screens/settings_page.dart';
 import '../widgets/task_list_item.dart';
+import 'add_task_page.dart';
+import 'completed_tasks_page.dart';
+import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,227 +18,203 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
   String _searchQuery = '';
-  Priority? _filterPriority;
-  SortBy _sortBy = SortBy.dueDate;
-  List<String> _selectedTaskIds = [];
+  Priority? _selectedPriority;
+  bool _isSelectionMode = false;
+  final Set<String> _selectedTasks = {};
 
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
-    final tasks = taskProvider.getFilteredAndSortedTasks(
-      _searchQuery,
-      _filterPriority,
-      _sortBy,
-    );
-    final uncompletedTasks = tasks.where((task) => !task.isCompleted).toList();
-
-    final bool isSelectionMode = _selectedTaskIds.isNotEmpty;
+    final tasks = taskProvider.tasks.where((task) => !task.isCompleted).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: isSelectionMode
-            ? Text('${_selectedTaskIds.length} selected')
-            : const Text('Task-it'),
-        actions: isSelectionMode
-            ? [
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.trash),
-                  onPressed: () {
-                    for (final taskId in _selectedTaskIds) {
-                      taskProvider.deleteTask(taskId);
-                    }
-                    setState(() {
-                      _selectedTaskIds = [];
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.xmark),
-                  onPressed: () {
-                    setState(() {
-                      _selectedTaskIds = [];
-                    });
-                  },
-                ),
-              ]
-            : [
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
-                  onPressed: () {
-                    showSearch(
-                        context: context, delegate: TaskSearchDelegate());
-                  },
-                ),
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.solidSquareCheck),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const CompletedTasksPage(),
-                      ),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.gear),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-      ),
+      appBar: _isSelectionMode ? _buildSelectionAppBar() : _buildDefaultAppBar(),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _buildFilterChip(),
-                const SizedBox(width: 8),
-                _buildSortChip(),
-              ],
-            ),
+          TableCalendar(
+            firstDay: DateTime.utc(2000, 1, 1),
+            lastDay: DateTime.utc(2100, 12, 31),
+            focusedDay: _focusedDay,
+            calendarFormat: CalendarFormat.twoWeeks,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDay, day);
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+            },
+            eventLoader: (day) {
+              return tasks
+                  .where((task) => isSameDay(task.dueDate, day))
+                  .toList();
+            },
           ),
+          const SizedBox(height: 8.0),
+          _buildSearchBar(),
           Expanded(
-            child: ListView.builder(
-              itemCount: uncompletedTasks.length,
-              itemBuilder: (context, index) {
-                final task = uncompletedTasks[index];
-                final isSelected = _selectedTaskIds.contains(task.id);
-                return TaskListItem(
-                  task: task,
-                  isSelected: isSelected,
-                  isSelectionMode: isSelectionMode,
-                  onSelected: () {
-                    setState(() {
-                      if (isSelected) {
-                        _selectedTaskIds.remove(task.id);
-                      } else {
-                        _selectedTaskIds.add(task.id);
-                      }
-                    });
-                  },
-                );
-              },
-            ),
+            child: _buildTaskList(tasks),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const AddTaskPage(),
+      floatingActionButton: _isSelectionMode
+          ? null
+          : FloatingActionButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AddTaskPage()),
+              ),
+              child: const Icon(Icons.add),
             ),
-          );
-        },
-        child: const FaIcon(FontAwesomeIcons.plus),
-      ),
     );
   }
 
-  Widget _buildFilterChip() {
-    return PopupMenuButton<Priority?>(
-      onSelected: (Priority? value) {
-        setState(() {
-          _filterPriority = value;
-        });
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<Priority?>>[
-        const PopupMenuItem<Priority?>(
-          value: null,
-          child: Text('All Priorities'),
+  AppBar _buildDefaultAppBar() {
+    return AppBar(
+      title: Text(
+        'Task-it',
+        style: GoogleFonts.poppins(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
         ),
-        ...Priority.values.map((priority) {
-          return PopupMenuItem<Priority?>(
-            value: priority,
-            child: Text(priority.toString().split('.').last),
-          );
-        }),
-      ],
-      child: Chip(
-        label: Text(_filterPriority?.toString().split('.').last ?? 'Filter'),
-        avatar: const FaIcon(FontAwesomeIcons.filter),
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.check_circle_outline),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CompletedTasksPage()),
+          ),
+        ),
+        PopupMenuButton<Priority>(
+          onSelected: (priority) {
+            setState(() {
+              _selectedPriority = priority;
+            });
+          },
+          itemBuilder: (context) => Priority.values
+              .map((priority) => PopupMenuItem(
+                    value: priority,
+                    child: Text(priority.toString().split('.').last),
+                  ))
+              .toList(),
+          icon: const Icon(Icons.filter_list),
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildSortChip() {
-    return PopupMenuButton<SortBy>(
-      onSelected: (SortBy value) {
-        setState(() {
-          _sortBy = value;
-        });
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<SortBy>>[
-        ...SortBy.values.map((sortBy) {
-          return PopupMenuItem<SortBy>(
-            value: sortBy,
-            child: Text(sortBy.toString().split('.').last),
-          );
-        }),
-      ],
-      child: Chip(
-        label: Text(_sortBy.toString().split('.').last),
-        avatar: const FaIcon(FontAwesomeIcons.arrowDownWideShort),
-      ),
-    );
-  }
-}
-
-class TaskSearchDelegate extends SearchDelegate {
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const FaIcon(FontAwesomeIcons.xmark),
+  AppBar _buildSelectionAppBar() {
+    return AppBar(
+      title: Text('${_selectedTasks.length} selected'),
+      leading: IconButton(
+        icon: const Icon(Icons.close),
         onPressed: () {
-          query = '';
+          setState(() {
+            _isSelectionMode = false;
+            _selectedTasks.clear();
+          });
         },
       ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const FaIcon(FontAwesomeIcons.arrowLeft),
-      onPressed: () {
-        close(context, null);
-      },
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () {
+            final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+            for (final taskId in _selectedTasks) {
+              taskProvider.deleteTask(taskId);
+            }
+            setState(() {
+              _isSelectionMode = false;
+              _selectedTasks.clear();
+            });
+          },
+        ),
+      ],
     );
   }
 
-  @override
-  Widget buildResults(BuildContext context) {
-    return _buildSearchResults(context);
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: TextField(
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Search...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+      ),
+    );
   }
 
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults(context);
-  }
+  Widget _buildTaskList(List<Task> tasks) {
+    List<Task> filteredTasks = tasks;
 
-  Widget _buildSearchResults(BuildContext context) {
-    final taskProvider = Provider.of<TaskProvider>(context);
-    final tasks =
-        taskProvider.getFilteredAndSortedTasks(query, null, SortBy.dueDate);
+    if (_searchQuery.isNotEmpty) {
+      filteredTasks = filteredTasks
+          .where((task) =>
+              task.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
+    }
+
+    if (_selectedPriority != null) {
+      filteredTasks = filteredTasks
+          .where((task) => task.priority == _selectedPriority)
+          .toList();
+    }
+
+    final selectedTasks = _selectedDay == null
+        ? filteredTasks
+        : filteredTasks
+            .where((task) => isSameDay(task.dueDate, _selectedDay!))
+            .toList();
+
+    if (selectedTasks.isEmpty) {
+      return const Center(
+        child: Text('No tasks for this day.'),
+      );
+    }
 
     return ListView.builder(
-      itemCount: tasks.length,
+      itemCount: selectedTasks.length,
       itemBuilder: (context, index) {
-        final task = tasks[index];
+        final task = selectedTasks[index];
         return TaskListItem(
           task: task,
-          isSelected: false,
-          isSelectionMode: false,
-          onSelected: () {},
+          isSelected: _selectedTasks.contains(task.id),
+          isSelectionMode: _isSelectionMode,
+          onSelected: () {
+            setState(() {
+              if (_isSelectionMode) {
+                if (_selectedTasks.contains(task.id)) {
+                  _selectedTasks.remove(task.id);
+                } else {
+                  _selectedTasks.add(task.id);
+                }
+                if (_selectedTasks.isEmpty) {
+                  _isSelectionMode = false;
+                }
+              } else {
+                _isSelectionMode = true;
+                _selectedTasks.add(task.id);
+              }
+            });
+          },
         );
       },
     );

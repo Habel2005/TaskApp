@@ -16,6 +16,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
   String _title = '';
   DateTime _dueDate = DateTime.now();
+  TimeOfDay _dueTime = TimeOfDay.now();
   Priority _priority = Priority.medium;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -32,13 +33,32 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _dueTime,
+    );
+    if (picked != null && picked != _dueTime) {
+      setState(() {
+        _dueTime = picked;
+      });
+    }
+  }
+
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      final newDueDate = DateTime(
+        _dueDate.year,
+        _dueDate.month,
+        _dueDate.day,
+        _dueTime.hour,
+        _dueTime.minute,
+      );
       final newTask = Task(
         id: DateTime.now().toString(),
         title: _title,
-        dueDate: _dueDate,
+        dueDate: newDueDate,
         priority: _priority,
       );
       Provider.of<TaskProvider>(context, listen: false).addTask(newTask);
@@ -82,6 +102,19 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   TextButton(
                     onPressed: () => _selectDate(context),
                     child: const Text('Select Date'),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Due Time: ${_dueTime.format(context)}',
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _selectTime(context),
+                    child: const Text('Select Time'),
                   ),
                 ],
               ),
