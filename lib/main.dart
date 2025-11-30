@@ -2,11 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/task_provider.dart';
-import 'screens/task_list_screen.dart';
-import 'theme/my_theme.dart'; // Import the custom theme
+import 'providers/theme_provider.dart';
+import 'screens/home_page.dart';
+import 'services/notification_service.dart';
+import 'theme/theme.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => TaskProvider()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,14 +26,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => TaskProvider(),
-      child: MaterialApp(
-        title: 'Task Manager',
-        theme: MyTheme.lightTheme, // Apply the custom light theme
-        home: const TaskListScreen(),
-        debugShowCheckedModeBanner: false, // Hide the debug banner
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Task Manager',
+          theme: MyTheme.lightTheme,
+          darkTheme: MyTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const HomePage(),
+        );
+      },
     );
   }
 }
