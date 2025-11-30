@@ -87,7 +87,8 @@ class ViewTaskPage extends StatelessWidget {
                           onPressed: () {
                             Provider.of<TaskProvider>(context, listen: false)
                                 .deleteTask(task.id);
-                            Navigator.of(context).popUntil((route) => route.isFirst);
+                            Navigator.of(context)
+                                .popUntil((route) => route.isFirst);
                           },
                           child: const Text('Delete'),
                         ),
@@ -178,7 +179,8 @@ class ViewTaskPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: valueColor ?? Theme.of(context).textTheme.bodyLarge?.color,
+                  color: valueColor ??
+                      Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],

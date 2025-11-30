@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/task_provider.dart';
@@ -27,15 +28,19 @@ class MyApp extends StatelessWidget {
               brightness: Brightness.light,
               primarySwatch: Colors.teal,
               visualDensity: VisualDensity.adaptivePlatformDensity,
+              textTheme: GoogleFonts.poppinsTextTheme(
+                Theme.of(context).textTheme,
+              ),
             ),
             darkTheme: ThemeData(
               brightness: Brightness.dark,
               primaryColor: Colors.tealAccent,
               scaffoldBackgroundColor: const Color(0xFF121212),
               cardColor: const Color(0xFF1E1E1E),
-              textTheme: const TextTheme(
-                bodyLarge: TextStyle(color: Colors.white),
-                bodyMedium: TextStyle(color: Colors.white70),
+              textTheme: GoogleFonts.poppinsTextTheme(
+                Theme.of(context)
+                    .primaryTextTheme
+                    .apply(bodyColor: Colors.white, displayColor: Colors.white),
               ),
               iconTheme: const IconThemeData(color: Colors.white70),
               appBarTheme: const AppBarTheme(

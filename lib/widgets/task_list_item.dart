@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 import '../models/task.dart';
 import '../providers/task_provider.dart';
@@ -43,6 +42,25 @@ class _TaskListItemState extends State<TaskListItem> {
   void dispose() {
     _timer.cancel();
     super.dispose();
+  }
+
+  String _formatDueDate(DateTime dueDate) {
+    final now = DateTime.now();
+    final difference = dueDate.difference(now);
+
+    if (difference.isNegative) {
+      return 'Overdue';
+    }
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d left';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h left';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m left';
+    } else {
+      return 'Due soon';
+    }
   }
 
   @override
@@ -159,7 +177,7 @@ class _TaskListItemState extends State<TaskListItem> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                timeago.format(widget.task.dueDate),
+                                _formatDueDate(widget.task.dueDate),
                                 style: const TextStyle(
                                     color: Colors.grey, fontSize: 14),
                               ),

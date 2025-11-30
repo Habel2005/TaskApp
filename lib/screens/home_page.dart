@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -24,21 +25,43 @@ class _HomePageState extends State<HomePage> {
   Priority? _selectedPriority;
   bool _isSelectionMode = false;
   final Set<String> _selectedTasks = {};
+  CalendarFormat _calendarFormat = CalendarFormat.week;
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _selectedDay = null;
+      _searchQuery = '';
+      _searchController.clear();
+      _selectedPriority = null;
+      _focusedDay = DateTime.now();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
-    final tasks = taskProvider.tasks.where((task) => !task.isCompleted).toList();
+    final tasks =
+        taskProvider.tasks.where((task) => !task.isCompleted).toList();
 
     return Scaffold(
-      appBar: _isSelectionMode ? _buildSelectionAppBar() : _buildDefaultAppBar(),
+      appBar:
+          _isSelectionMode ? _buildSelectionAppBar() : _buildDefaultAppBar(),
       body: Column(
         children: [
           TableCalendar(
             firstDay: DateTime.utc(2000, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: _focusedDay,
-            calendarFormat: CalendarFormat.twoWeeks,
+            calendarFormat: _calendarFormat,
+            headerStyle: const HeaderStyle(formatButtonVisible: false),
             selectedDayPredicate: (day) {
               return isSameDay(_selectedDay, day);
             },
@@ -55,7 +78,6 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           const SizedBox(height: 8.0),
-          _buildSearchBar(),
           Expanded(
             child: _buildTaskList(tasks),
           ),
@@ -67,12 +89,51 @@ class _HomePageState extends State<HomePage> {
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const AddTaskPage()),
               ),
-              child: const Icon(Icons.add),
+              child: const FaIcon(FontAwesomeIcons.plus),
             ),
     );
   }
 
   AppBar _buildDefaultAppBar() {
+    if (_isSearching) {
+      return AppBar(
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
+          onPressed: () {
+            setState(() {
+              _isSearching = false;
+              _searchQuery = '';
+              _searchController.clear();
+            });
+          },
+        ),
+        title: TextField(
+          controller: _searchController,
+          autofocus: true,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value;
+            });
+          },
+          decoration: const InputDecoration(
+            hintText: 'Search tasks...',
+            border: InputBorder.none,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.times),
+            onPressed: () {
+              setState(() {
+                _searchQuery = '';
+                _searchController.clear();
+              });
+            },
+          ),
+        ],
+      );
+    }
+
     return AppBar(
       title: Text(
         'Task-it',
@@ -83,30 +144,94 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.check_circle_outline),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CompletedTasksPage()),
-          ),
-        ),
-        PopupMenuButton<Priority>(
-          onSelected: (priority) {
+          icon: const FaIcon(FontAwesomeIcons.search),
+          onPressed: () {
             setState(() {
-              _selectedPriority = priority;
+              _isSearching = true;
             });
           },
-          itemBuilder: (context) => Priority.values
-              .map((priority) => PopupMenuItem(
-                    value: priority,
-                    child: Text(priority.toString().split('.').last),
-                  ))
-              .toList(),
-          icon: const Icon(Icons.filter_list),
+        ),
+        PopupMenuButton<dynamic>(
+          onSelected: (value) {
+            if (value == 'clear_priority') {
+              setState(() {
+                _selectedPriority = null;
+              });
+            } else if (value is Priority) {
+              setState(() {
+                _selectedPriority = value;
+              });
+            }
+          },
+          itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
+            const PopupMenuItem<dynamic>(
+              enabled: false,
+              child: Text('Filter by Priority'),
+            ),
+            ...Priority.values.map((priority) {
+              return PopupMenuItem<Priority>(
+                value: priority,
+                child: Text('  ${priority.toString().split('.').last}'),
+              );
+            }).toList(),
+            if (_selectedPriority != null)
+              PopupMenuItem<String>(
+                value: 'clear_priority',
+                child: const Text('  Clear Filter'),
+              ),
+          ],
+          icon: const FaIcon(FontAwesomeIcons.filter),
         ),
         IconButton(
-          icon: const Icon(Icons.settings),
+          icon: const FaIcon(FontAwesomeIcons.cog),
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const SettingsPage()),
           ),
+        ),
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'toggle_calendar') {
+              setState(() {
+                _calendarFormat = _calendarFormat == CalendarFormat.week
+                    ? CalendarFormat.month
+                    : CalendarFormat.week;
+              });
+            } else if (value == 'reset_filters') {
+              _resetFilters();
+            } else if (value == 'completed_tasks') {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CompletedTasksPage()),
+              );
+            }
+          },
+          itemBuilder: (context) => <PopupMenuEntry<String>>[
+            PopupMenuItem<String>(
+              value: 'toggle_calendar',
+              child: ListTile(
+                leading: FaIcon(
+                  _calendarFormat == CalendarFormat.week
+                      ? FontAwesomeIcons.calendarWeek
+                      : FontAwesomeIcons.calendarDay,
+                ),
+                title: const Text('Change Calendar View'),
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'completed_tasks',
+              child: const ListTile(
+                leading: FaIcon(FontAwesomeIcons.checkCircle),
+                title: Text('Completed Tasks'),
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'reset_filters',
+              child: const ListTile(
+                leading: FaIcon(FontAwesomeIcons.arrowsRotate),
+                title: Text('Reset Filters'),
+              ),
+            ),
+          ],
+          icon: const FaIcon(FontAwesomeIcons.ellipsisV),
         ),
       ],
     );
@@ -116,7 +241,7 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       title: Text('${_selectedTasks.length} selected'),
       leading: IconButton(
-        icon: const Icon(Icons.close),
+        icon: const FaIcon(FontAwesomeIcons.times),
         onPressed: () {
           setState(() {
             _isSelectionMode = false;
@@ -126,9 +251,10 @@ class _HomePageState extends State<HomePage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.delete),
+          icon: const FaIcon(FontAwesomeIcons.trash),
           onPressed: () {
-            final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+            final taskProvider =
+                Provider.of<TaskProvider>(context, listen: false);
             for (final taskId in _selectedTasks) {
               taskProvider.deleteTask(taskId);
             }
@@ -139,26 +265,6 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: TextField(
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value;
-          });
-        },
-        decoration: InputDecoration(
-          hintText: 'Search...',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-        ),
-      ),
     );
   }
 
