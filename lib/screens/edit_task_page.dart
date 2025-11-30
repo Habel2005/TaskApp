@@ -19,7 +19,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
   late String _title;
   late DateTime _dueDate;
   late Priority _priority;
-  TimeOfDay? _notificationTime;
 
   @override
   void initState() {
@@ -27,7 +26,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
     _title = widget.task.title;
     _dueDate = widget.task.dueDate;
     _priority = widget.task.priority;
-    _notificationTime = widget.task.notificationTime;
   }
 
   @override
@@ -99,30 +97,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
                   }
                 },
               ),
-              const SizedBox(height: 16.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Notification Time: ${_notificationTime != null ? _notificationTime!.format(context) : 'Not set'}',
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      final pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: _notificationTime ?? TimeOfDay.now(),
-                      );
-                      if (pickedTime != null) {
-                        setState(() {
-                          _notificationTime = pickedTime;
-                        });
-                      }
-                    },
-                    child: const Text('Select Time'),
-                  ),
-                ],
-              ),
               const SizedBox(height: 32.0),
               ElevatedButton(
                 onPressed: () {
@@ -133,7 +107,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
                       title: _title,
                       dueDate: _dueDate,
                       priority: _priority,
-                      notificationTime: _notificationTime,
                       isCompleted: widget.task.isCompleted,
                     );
                     Provider.of<TaskProvider>(context, listen: false)

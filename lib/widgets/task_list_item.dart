@@ -1,78 +1,143 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import '../models/task.dart';
 import '../providers/task_provider.dart';
-import '../screens/edit_task_page.dart';
+import '../screens/view_task_page.dart';
 
-class TaskListItem extends StatelessWidget {
+class TaskListItem extends StatefulWidget {
   final Task task;
   final bool isSelected;
+  final bool isSelectionMode;
   final VoidCallback onSelected;
 
   const TaskListItem({
     super.key,
     required this.task,
     required this.isSelected,
+    required this.isSelectionMode,
     required this.onSelected,
   });
 
   @override
+  State<TaskListItem> createState() => _TaskListItemState();
+}
+
+class _TaskListItemState extends State<TaskListItem> {
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    final Color priorityColor;
+    switch (widget.task.priority) {
+      case Priority.high:
+        priorityColor = Colors.red;
+        break;
+      case Priority.medium:
+        priorityColor = Colors.orange;
+        break;
+      case Priority.low:
+        priorityColor = Colors.green;
+        break;
+    }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      elevation: 4.0,
-      child: ListTile(
-        onTap: onSelected,
-        selected: isSelected,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-        leading: Checkbox(
-          value: isSelected,
-          onChanged: (value) => onSelected(),
-        ),
-        title: Text(
-          task.title,
-          style: TextStyle(
-            decoration: task.isCompleted
-                ? TextDecoration.lineThrough
-                : TextDecoration.none,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Due: ${DateFormat.yMd().format(task.dueDate)}'),
-            if (task.notificationTime != null)
-              Text(
-                  'Reminder: ${task.notificationTime!.format(context)}'),
+    return GestureDetector(
+      onTap: widget.isSelectionMode
+          ? widget.onSelected
+          : () {
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      ViewTaskPage(task: widget.task),
+                  transitionDuration: Duration.zero,
+                ),
+              );
+            },
+      onLongPress: widget.onSelected,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(25),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
           ],
+          border: widget.isSelected
+              ? Border.all(color: Theme.of(context).primaryColor, width: 2)
+              : null,
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => EditTaskPage(task: task),
+            Transform.scale(
+              scale: 1.2,
+              child: Checkbox(
+                value: widget.task.isCompleted,
+                onChanged: widget.isSelectionMode
+                    ? null
+                    : (value) {
+                        taskProvider.toggleTaskCompletion(widget.task.id);
+                      },
+                shape: const CircleBorder(),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.task.title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      decoration: widget.task.isCompleted
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                      color: widget.task.isCompleted ? Colors.grey : null,
+                    ),
                   ),
-                );
-              },
+                  const SizedBox(height: 4),
+                  Text(
+                    timeago.format(widget.task.dueDate),
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                taskProvider.deleteTask(task.id);
-              },
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: priorityColor,
+                shape: BoxShape.circle,
+              ),
             ),
           ],
         ),
-        isThreeLine: true,
       ),
     );
   }

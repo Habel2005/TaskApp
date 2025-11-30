@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../models/task.dart';
 import '../providers/task_provider.dart';
-import '../services/notification_service.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -17,7 +16,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
   String _title = '';
   DateTime _dueDate = DateTime.now();
-  TimeOfDay? _notificationTime;
   Priority _priority = Priority.medium;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -34,18 +32,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _notificationTime ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _notificationTime = picked;
-      });
-    }
-  }
-
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -53,26 +39,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
         id: DateTime.now().toString(),
         title: _title,
         dueDate: _dueDate,
-        notificationTime: _notificationTime,
         priority: _priority,
       );
       Provider.of<TaskProvider>(context, listen: false).addTask(newTask);
-
-      if (_notificationTime != null) {
-        final notificationTime = DateTime(
-          _dueDate.year,
-          _dueDate.month,
-          _dueDate.day,
-          _notificationTime!.hour,
-          _notificationTime!.minute,
-        );
-        NotificationService().scheduleNotification(
-          newTask.id.hashCode,
-          'Task Reminder',
-          _title,
-          notificationTime,
-        );
-      }
 
       Navigator.of(context).pop();
     }
@@ -113,20 +82,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   TextButton(
                     onPressed: () => _selectDate(context),
                     child: const Text('Select Date'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Reminder Time: ${_notificationTime?.format(context) ?? 'Not set'}',
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => _selectTime(context),
-                    child: const Text('Select Time'),
                   ),
                 ],
               ),
