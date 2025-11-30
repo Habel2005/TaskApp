@@ -3,9 +3,25 @@ import '../models/task.dart';
 
 class TaskProvider with ChangeNotifier {
   final List<Task> _tasks = [
-    Task(id: '1', title: 'Complete Flutter UI', dueDate: DateTime.now(), priority: Priority.high),
-    Task(id: '2', title: 'Write documentation', dueDate: DateTime.now().add(const Duration(days: 1)), priority: Priority.medium),
-    Task(id: '3', title: 'Test the app', dueDate: DateTime.now().add(const Duration(days: 2)), isCompleted: true, priority: Priority.low),
+    Task(
+      id: '1',
+      title: 'Complete Flutter UI',
+      dueDate: DateTime.now(),
+      priority: Priority.high,
+    ),
+    Task(
+      id: '2',
+      title: 'Write documentation',
+      dueDate: DateTime.now().add(const Duration(days: 1)),
+      priority: Priority.medium,
+    ),
+    Task(
+      id: '3',
+      title: 'Test the app',
+      dueDate: DateTime.now().add(const Duration(days: 2)),
+      isCompleted: true,
+      priority: Priority.low,
+    ),
   ];
 
   List<Task> get tasks => _tasks;

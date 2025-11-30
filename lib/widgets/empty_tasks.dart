@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class EmptyTasks extends StatelessWidget {
@@ -19,15 +18,15 @@ class EmptyTasks extends StatelessWidget {
           Text(
             'No tasks yet!',
             style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
             'Add new tasks to get started.',
             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

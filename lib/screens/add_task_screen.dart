@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -71,7 +70,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.task == null ? 'Add New Task' : 'Edit Task', style: textTheme.headlineSmall),
+        title: Text(
+          widget.task == null ? 'Add New Task' : 'Edit Task',
+          style: textTheme.headlineSmall,
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -87,7 +89,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   labelText: 'Task Title',
                   hintText: 'e.g., Buy groceries',
                   labelStyle: textTheme.bodyMedium,
-                  prefixIcon: Icon(Icons.task_alt_outlined, color: colorScheme.primary),
+                  prefixIcon: Icon(
+                    Icons.task_alt_outlined,
+                    color: colorScheme.primary,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -98,7 +103,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 onSaved: (value) => _title = value!,
               ),
               const SizedBox(height: 24),
-              Text('Due Date', style: textTheme.titleSmall!.copyWith(color: colorScheme.onSurface)),
+              Text(
+                'Due Date',
+                style: textTheme.titleSmall!.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () async {
@@ -111,13 +121,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       return Theme(
                         data: Theme.of(context).copyWith(
                           colorScheme: ColorScheme.light(
-                            primary: colorScheme.primary, // header background color
-                            onPrimary: colorScheme.onPrimary, // header text color
+                            primary:
+                                colorScheme.primary, // header background color
+                            onPrimary:
+                                colorScheme.onPrimary, // header text color
                             onSurface: colorScheme.onSurface, // body text color
                           ),
                           textButtonTheme: TextButtonThemeData(
                             style: TextButton.styleFrom(
-                              foregroundColor: colorScheme.primary, // button text color
+                              foregroundColor:
+                                  colorScheme.primary, // button text color
                             ),
                           ),
                         ),
@@ -132,7 +145,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(12),
@@ -153,19 +169,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text('Priority', style: textTheme.titleSmall!.copyWith(color: colorScheme.onSurface)),
+              Text(
+                'Priority',
+                style: textTheme.titleSmall!.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
               const SizedBox(height: 8),
               DropdownButtonFormField<Priority>(
                 initialValue: _priority,
                 decoration: InputDecoration(
                   labelText: 'Task Priority',
                   labelStyle: textTheme.bodyMedium,
-                  prefixIcon: Icon(Icons.priority_high_rounded, color: colorScheme.primary),
+                  prefixIcon: Icon(
+                    Icons.priority_high_rounded,
+                    color: colorScheme.primary,
+                  ),
                 ),
                 items: Priority.values.map((Priority priority) {
                   return DropdownMenuItem<Priority>(
                     value: priority,
-                    child: Text(priority.toString().split('.').last, style: textTheme.bodyMedium),
+                    child: Text(
+                      priority.toString().split('.').last,
+                      style: textTheme.bodyMedium,
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {

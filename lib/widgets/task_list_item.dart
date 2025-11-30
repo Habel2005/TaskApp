@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +19,9 @@ class TaskListItem extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      elevation: Theme.of(context).cardTheme.elevation, // Apply card theme elevation
+      elevation: Theme.of(
+        context,
+      ).cardTheme.elevation, // Apply card theme elevation
       shape: Theme.of(context).cardTheme.shape, // Apply card theme shape
       margin: Theme.of(context).cardTheme.margin, // Apply card theme margin
       child: Slidable(
@@ -56,7 +57,8 @@ class TaskListItem extends StatelessWidget {
                   ),
                 );
               },
-              backgroundColor: colorScheme.primaryContainer, // Use theme primaryContainer color
+              backgroundColor: colorScheme
+                  .primaryContainer, // Use theme primaryContainer color
               foregroundColor: colorScheme.onPrimaryContainer,
               icon: Icons.edit_rounded,
               label: 'Edit',
@@ -65,29 +67,43 @@ class TaskListItem extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: task.isCompleted ? colorScheme.tertiary.withOpacity(0.1) : colorScheme.surface,
+            color: task.isCompleted
+                ? colorScheme.tertiary.withOpacity(0.1)
+                : colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: CheckboxListTile(
             title: Text(
               task.title,
               style: textTheme.titleMedium!.copyWith(
-                decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                color: task.isCompleted ? colorScheme.onSurfaceVariant : colorScheme.onSurface,
+                decoration: task.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
+                color: task.isCompleted
+                    ? colorScheme.onSurfaceVariant
+                    : colorScheme.onSurface,
               ),
             ),
             subtitle: Text(
               DateFormat.yMMMd().format(task.dueDate),
               style: textTheme.bodySmall!.copyWith(
-                decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                color: task.isCompleted ? colorScheme.onSurfaceVariant : colorScheme.onSurface.withOpacity(0.7),
+                decoration: task.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
+                color: task.isCompleted
+                    ? colorScheme.onSurfaceVariant
+                    : colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
             value: task.isCompleted,
             onChanged: (value) {
               taskProvider.toggleTaskCompletion(task.id);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Task \'${task.title}\' ${value! ? 'completed' : 'uncompleted'}')),
+                SnackBar(
+                  content: Text(
+                    'Task \'${task.title}\' ${value! ? 'completed' : 'uncompleted'}',
+                  ),
+                ),
               );
             },
             secondary: Container(
@@ -104,7 +120,8 @@ class TaskListItem extends StatelessWidget {
                 ),
               ),
             ),
-            activeColor: colorScheme.tertiary, // Use theme tertiary color for active checkbox
+            activeColor: colorScheme
+                .tertiary, // Use theme tertiary color for active checkbox
             checkColor: colorScheme.onTertiary,
           ),
         ),
