@@ -52,7 +52,7 @@ All data is stored **locally using SharedPreferences** — no Firebase, no backe
 ## 🛠️ How to Run
 
 ```bash
-git clone https://github.com/your-username/TaskApp.git
+git clone [https://github.com/your-username/TaskApp.git](https://github.com/Habel2005/TaskApp.git)
 cd TaskApp
 flutter pub get
 flutter run
