@@ -1,16 +1,69 @@
-# myapp
+# ✅ TaskApp
 
-A new Flutter project.
+A simple offline task management app built using **Flutter**.  
+TaskApp helps you add, organize, and track your daily tasks using a built-in calendar and priority system.
 
-## Getting Started
+All data is stored **locally using SharedPreferences** — no Firebase, no backend, and no internet required.
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## 📱 Features
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Add tasks with:
+  - Title
+  - Date
+  - Time
+  - Priority
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- View task details by tapping on any task
+- Edit or delete single tasks
+- Long press to select and delete multiple tasks
+
+- Mark tasks as completed
+- View completed tasks separately
+
+- Calendar view with:
+  - Dots showing dates that contain tasks
+  - Week view & Month view
+  - Select any date to view tasks for that day
+
+- Sort tasks by priority
+- Reset filters to default
+
+- Theme options:
+  - Light mode
+  - Dark mode
+  - System default
+
+---
+
+## 🧠 Tech Stack
+
+- Flutter
+- Dart
+- SharedPreferences (Local Storage)
+
+✅ Offline App  
+✅ No Firebase  
+✅ No Backend  
+
+---
+
+## 🛠️ How to Run
+
+```bash
+git clone https://github.com/your-username/TaskApp.git
+cd TaskApp
+flutter pub get
+flutter run
+```
+## 📌 Use Cases
+
+  - Daily task tracking
+  - Student work & assignments
+  - Personal scheduling
+  - Offline productivity tool
+
+## 👨‍💻 Developer
+
+Developed by [Habel](https://github.com/Habel2005)
